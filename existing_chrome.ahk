@@ -1,4 +1,3 @@
-
 class Chrome
 {
 	static DebugPort := 9222
@@ -18,31 +17,29 @@ class Chrome
 		}
 	}
 	URL(url, fnCallback:=""){
-		for k,val in this.GetPageList(){
-			if instr(val.url, url)=1 {
-				return new this.Page(val.webSocketDebuggerUrl, fnCallback)
-			}
-		}
+		return new this.Page(this.Debug(url).wsdurl, fnCallback)
 	}
-	Tab(url){
+	NewTab(url, fnCallback:=""){
 		http := ComObjCreate("WinHttp.WinHttpRequest.5.1")
 		http.open("GET", "http://127.0.0.1:" this.DebugPort "/json/new?" url)
 		http.send()
+		Sleep 200
+		return new this.Page(this.Debug(url).wsdurl, fnCallback)
 	}
 	Close(url){
 		http := ComObjCreate("WinHttp.WinHttpRequest.5.1")
-		http.open("GET", "http://127.0.0.1:" this.DebugPort "/json/close/" this.PageID(url))
+		http.open("GET", "http://127.0.0.1:" this.DebugPort "/json/close/" this.Debug(url).id)
 		http.send()
 	}
 	Activate(url){
 		http := ComObjCreate("WinHttp.WinHttpRequest.5.1")
-		http.open("GET", "http://127.0.0.1:" this.DebugPort "/json/activate/" this.PageID(url))
+		http.open("GET", "http://127.0.0.1:" this.DebugPort "/json/activate/" this.Debug(url).id)
 		http.send()
 	}
-	PageID(url){
+	Debug(url){
 		for k,val in this.GetPageList()
-			if instr(val.url, url)=1 
-				return val.id
+			if instr(val.url, url)=1
+				return {id : val.id, wsdurl : val.webSocketDebuggerUrl}
 	}
 	Kill(){
 		Process, Close, % this.PID
@@ -71,6 +68,11 @@ class Chrome
 	GetPage(Index:=1, Type:="page", fnCallback:=""){
 		return this.GetPageBy("type", Type, "exact", Index, fnCallback)
 	}
+	/*
+	for i,value1 in ANY_OBJECT
+		for j,value2 in value1
+			MsgBox %i% %j% %value2%
+	*/
 	class Page
 	{
 		Connected := False
