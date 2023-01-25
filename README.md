@@ -10,7 +10,7 @@ todo
 SetBatchLines, -1
 
 chrome := new Chrome("https://google.com https://bing.com https://wiki.com")
-sleep 2000
+sleep 1000
 page := chrome.GetPage(1)
 MsgBox % page.Evaluate("document.body.innerText").value
 
