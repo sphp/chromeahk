@@ -20,6 +20,11 @@ MsgBox % page.Evaluate("document.body.innerText").value
 page := chrome.GetPage(2)
 MsgBox % page.Evaluate("document.body.innerText").value
 
+page := chrome.GetPage(url1)
+MsgBox % page.Evaluate("document.body.innerText").value
+page := chrome.GetPage(url2)
+MsgBox % page.Evaluate("document.body.innerText").value
+
 chrome.Activate(url1)
 sleep 1000
 chrome.Activate(url2)
@@ -30,7 +35,7 @@ page.WaitForLoad()
 sleep 1000
 MsgBox % page.Evaluate("document.body.innerText").value
 
-chrome.close("baidu")
+chrome.close("baidu.com")
 sleep 1000
 
 ExitApp
