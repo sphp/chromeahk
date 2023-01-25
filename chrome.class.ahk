@@ -16,6 +16,7 @@ class Chrome
 			prof := Profile ? Profile : "Default"
 			chrome_cmd = "%path%" %urls% --remote-debugging-port=%port% --profile-directory="%prof%"
 			Run, % chrome_cmd,,,VarPID
+			Sleep 1000
 			this.PID := VarPID
 		}
 	}
@@ -47,14 +48,10 @@ class Chrome
 	}
 	Debug(url=1){
 		n=0
+		url := instr(url,"https://")=1 ? StrReplace(url,"https://") : StrReplace(url,"http://")
 		for k,val in this.GetPageList()
-		{
-			url := instr(url,"https://")=1 ? StrReplace(url,"https://") : StrReplace(url,"http://")
-			if strlen(url)>2 && instr(val.url, url)
+			if (strlen(url)>2 && instr(val.url, url)<10) || (++n=url && instr(val.type, "page"))
 				return {id : val.id, wsdurl : val.webSocketDebuggerUrl}
-			else if ++n=url && instr(val.type, "page")
-				return {id : val.id, wsdurl : val.webSocketDebuggerUrl}
-		}
 	}
 	Kill(){
 		Process, Close, % this.PID
