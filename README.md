@@ -34,9 +34,7 @@ page := chrome.NewTab("https://www.baidu.com/")
 page.WaitForLoad()
 sleep 1000
 MsgBox % page.Evaluate("document.body.innerText").value
-
-chrome.close("baidu.com")
-sleep 1000
+chrome.close("https://www.baidu.com/")
 
 ExitApp
 Return
