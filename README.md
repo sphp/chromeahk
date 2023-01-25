@@ -7,7 +7,7 @@
 #NoEnv
 #SingleInstance, Force
 SetBatchLines, -1
-#Include chromeahk
+#Include %A_ScriptDir%\existing_chrome.ahk
 
 chrome := new Chrome("https://google.com https://bing.com https://wiki.com")
 winwait, Chrome
