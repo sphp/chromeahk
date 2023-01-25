@@ -1,6 +1,3 @@
-;-----------------------------------------------------------------------------------------------------------------------------
-;Chrome WebSocket Remote Debugger
-;-----------------------------------------------------------------------------------------------------------------------------
 class Chrome
 {
 	static DebugPort := 9222
@@ -51,19 +48,22 @@ class Chrome
 	Debug(url=1){
 		n=0
 		for k,val in this.GetPageList()
-			if url && instr(val.url, url)=1
+		{
+			url := instr(url,"https://")=1 ? StrReplace(url,"https://") : StrReplace(url,"http://")
+			if strlen(url)>2 && instr(val.url, url)
 				return {id : val.id, wsdurl : val.webSocketDebuggerUrl}
-			else if ++n= url && instr(val.type, "page")
+			else if ++n=url && instr(val.type, "page")
 				return {id : val.id, wsdurl : val.webSocketDebuggerUrl}
+		}
 	}
 	Kill(){
 		Process, Close, % this.PID
 	}
-	GetPageList(){
+	GetPageList(res=1){
 		http := ComObjCreate("WinHttp.WinHttpRequest.5.1")
 		http.open("GET", "http://127.0.0.1:" this.DebugPort "/json")
 		http.send()
-		return this.Jxon_Load(http.responseText)
+		return res ? this.Jxon_Load(http.responseText) : http.responseText
 	}
 	/*
 	for i,value1 in ANY_OBJECT
