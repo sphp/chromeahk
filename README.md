@@ -1,4 +1,4 @@
-# existing chrome ahk
+# existing chrome.class.ahk
 
 # Chrome WebSocket Remote Debugger
 
@@ -6,11 +6,10 @@
 ```
 #NoEnv
 #SingleInstance, Force
+#Include %A_ScriptDir%\chrome.class.ahk
 SetBatchLines, -1
-#Include %A_ScriptDir%\existing_chrome.ahk
 
 chrome := new Chrome("https://google.com https://bing.com https://wiki.com")
-winwait, Chrome
 
 page := chrome.GetPage(1)
 page.WaitForLoad()
@@ -26,4 +25,5 @@ MsgBox % page.Evaluate("document.body.innerText").value
 
 ExitApp
 Return
+
 ```
