@@ -61,11 +61,6 @@ class Chrome
 		http.send()
 		return res ? this.Jxon_Load(http.responseText) : http.responseText
 	}
-	/*
-	for i,value1 in ANY_OBJECT
-		for j,value2 in value1
-			MsgBox %i% %j% %value2%
-	*/
 	class Page
 	{
 		Connected := False
