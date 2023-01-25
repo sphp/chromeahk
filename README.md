@@ -9,8 +9,8 @@ todo
 #Include %A_ScriptDir%\chrome.class.ahk
 SetBatchLines, -1
 
-url1 = https://google.com
-url2 = https://bing.com
+url1 := "https://google.com"
+url2 := "https://bing.com"
 
 chrome := new Chrome(url1 " " url2)
 sleep 1000
@@ -21,10 +21,10 @@ MsgBox % page.Evaluate("document.body.innerText").value
 page := chrome.GetPage(2)
 MsgBox % page.Evaluate("document.body.innerText").value
 
-page := chrome.GetPage("google.com")
+page := chrome.GetPage(url1)
 MsgBox % page.Evaluate("document.body.innerText").value
 
-page := chrome.GetPage("bing.com")
+page := chrome.GetPage(url2)
 MsgBox % page.Evaluate("document.body.innerText").value
 
 ExitApp
