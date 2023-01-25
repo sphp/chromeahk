@@ -17,15 +17,21 @@ sleep 1000
 
 page := chrome.GetPage(1)
 MsgBox % page.Evaluate("document.body.innerText").value
-
 page := chrome.GetPage(2)
 MsgBox % page.Evaluate("document.body.innerText").value
 
-page := chrome.GetPage(url1)
+chrome.Activate(url1)
+sleep 1000
+chrome.Activate(url2)
+sleep 1000
+
+page := chrome.NewTab("https://www.baidu.com/")
+page.WaitForLoad()
+sleep 1000
 MsgBox % page.Evaluate("document.body.innerText").value
 
-page := chrome.GetPage(url2)
-MsgBox % page.Evaluate("document.body.innerText").value
+chrome.close("baidu")
+sleep 1000
 
 ExitApp
 Return
