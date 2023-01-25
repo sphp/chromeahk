@@ -47,8 +47,7 @@ class Chrome
 		http.send()
 	}
 	Debug(url=1){
-		n=0
-		url := instr(url,"https://")=1 ? StrReplace(url,"https://") : StrReplace(url,"http://")
+		n:=0,url := instr(url,"https://")=1 ? StrReplace(url,"https://") : StrReplace(url,"http://")
 		for k,val in this.GetPageList()
 			if (strlen(url)>2 && instr(val.url, url)<10) || (++n=url && instr(val.type, "page"))
 				return {id : val.id, wsdurl : val.webSocketDebuggerUrl}
