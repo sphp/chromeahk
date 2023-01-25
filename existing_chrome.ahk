@@ -1,4 +1,3 @@
-
 ;-----------------------------------------------------------------------------------------------------------------------------
 ;Chrome WebSocket Remote Debugger
 ;-----------------------------------------------------------------------------------------------------------------------------
@@ -29,7 +28,7 @@ class Chrome
 				return StrReplace(Match,"--remote-debugging-port=")
 		}
 	}
-	URL(url, fnCallback:=""){
+	GetPage(url, fnCallback:=""){
 		return new this.Page(this.Debug(url).wsdurl, fnCallback)
 	}
 	NewTab(url, fnCallback:=""){
@@ -49,9 +48,12 @@ class Chrome
 		http.open("GET", "http://127.0.0.1:" this.DebugPort "/json/activate/" this.Debug(url).id)
 		http.send()
 	}
-	Debug(url){
+	Debug(url=1){
+		n=0
 		for k,val in this.GetPageList()
-			if instr(val.url, url)=1
+			if url && instr(val.url, url)=1
+				return {id : val.id, wsdurl : val.webSocketDebuggerUrl}
+			else if ++n= url && instr(val.type, "page")
 				return {id : val.id, wsdurl : val.webSocketDebuggerUrl}
 	}
 	Kill(){
