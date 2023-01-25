@@ -1,17 +1,27 @@
+
 ;-----------------------------------------------------------------------------------------------------------------------------
 ;Chrome WebSocket Remote Debugger
 ;-----------------------------------------------------------------------------------------------------------------------------
 class Chrome
 {
 	static DebugPort := 9222
-	__New(){
+	__New(URLs=0, Profile=0, Port=0, Path=0){
 		if(UID := WinExist("ahk_exe chrome.exe")){
-			WinGet, PID, PID,% "ahk_id " UID
-			this.PID := PID
+			WinGet, VarPID, PID,% "ahk_id " UID
+			this.PID := VarPID
 			this.DebugPort := this.DebPort()
 		}
-		else
-			ExitApp
+		else {
+			if !Path
+				FileGetShortcut, %A_StartMenuCommon%\Programs\Google Chrome.lnk, Path
+			path := Path ? Path : "C:\Program Files\Google\Chrome\Application\chrome.exe"
+			urls := URLs ? URLs : "about:blank"
+			port := Port ? Port : this.DebugPort
+			prof := Profile ? Profile : "Default"
+			chrome_cmd = "%path%" %urls% --remote-debugging-port=%port% --profile-directory="%prof%"
+			Run, % chrome_cmd,,,VarPID
+			this.PID := VarPID
+		}
 	}
 	DebPort(){
 		for Item in ComObjGet("winmgmts:").ExecQuery("SELECT CommandLine FROM Win32_Process" . " WHERE Name = 'chrome.exe'") {
@@ -52,24 +62,6 @@ class Chrome
 		http.open("GET", "http://127.0.0.1:" this.DebugPort "/json")
 		http.send()
 		return this.Jxon_Load(http.responseText)
-	}
-	GetPageBy(Key, Value, MatchMode:="exact", Index:=1, fnCallback:=""){
-		Count := 0
-		for n, PageData in this.GetPageList()
-		{
-			if (((MatchMode = "exact" && PageData[Key] = Value) ; Case insensitive
-				|| (MatchMode = "contains" && InStr(PageData[Key], Value))
-				|| (MatchMode = "startswith" && InStr(PageData[Key], Value) == 1)
-				|| (MatchMode = "regex" && PageData[Key] ~= Value))
-				&& ++Count == Index)
-				return new this.Page(PageData.webSocketDebuggerUrl, fnCallback)
-		}
-	}
-	GetPageByURL(Value, MatchMode:="startswith", Index:=1, fnCallback:=""){
-		return this.GetPageBy("url", Value, MatchMode, Index, fnCallback)
-	}
-	GetPage(Index:=1, Type:="page", fnCallback:=""){
-		return this.GetPageBy("type", Type, "exact", Index, fnCallback)
 	}
 	/*
 	for i,value1 in ANY_OBJECT
