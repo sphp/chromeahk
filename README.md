@@ -2,6 +2,8 @@
 
 # Chrome WebSocket Remote Debugger
 
+# example
+```
 #NoEnv
 #SingleInstance, Force
 SetBatchLines, -1
@@ -24,3 +26,4 @@ MsgBox % page.Evaluate("document.body.innerText").value
 
 ExitApp
 Return
+```
