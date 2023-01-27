@@ -40,8 +40,6 @@ ExitApp
 Return
 ```
 # Quick links
-https://chromedevtools.github.io/devtools-protocol
-
-https://peter.sh/experiments/chromium-command-line-switches
-
-[https://source.chromium.org/chromium/chromium](https://source.chromium.org/chromium/chromium)
+[devtools protocol](https://chromedevtools.github.io/devtools-protocol)
+[chromium source code](https://source.chromium.org/chromium/chromium)
+[chromium command line switches](https://peter.sh/experiments/chromium-command-line-switches/)
