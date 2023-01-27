@@ -1,5 +1,4 @@
-# Modified chrome.ahk
-[chrome](https://github.com/G33kDude/Chrome.ahk)
+# Modified [chrome.ahk](https://github.com/G33kDude/Chrome.ahk)
 
 # Chrome WebSocket Remote Debugger
 todo
