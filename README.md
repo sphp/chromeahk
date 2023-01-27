@@ -39,3 +39,7 @@ chrome.close("https://www.baidu.com/")
 ExitApp
 Return
 ```
+# Quick links
+https://chromedevtools.github.io/devtools-protocol/
+https://peter.sh/experiments/chromium-command-line-switches/
+https://source.chromium.org/chromium/chromium/src/
