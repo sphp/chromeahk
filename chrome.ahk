@@ -8,57 +8,30 @@ class chrome
 	{
 		return """" RegExReplace(Param, "(\\*)""", "$1$1\""") """"
 	}
-	/*
-		Finds instances of chrome in debug mode and the ports they're running
-		on. If no instances are found, returns a false value. If one or more
-		instances are found, returns an associative array where the keys are
-		the ports, and the values are the full command line texts used to start
-		the processes.
-		
-		One example of how this may be used would be to open chrome on a
-		different port if an instance of chrome is already open on the port
-		you wanted to used.
-		
-		```
-		; If the wanted port is taken, use the largest taken port plus one
-		DebugPort := 9222
-		if (Chromes := Chrome.FindInstances()).HasKey(DebugPort)
-			DebugPort := Chromes.MaxIndex() + 1
-		ChromeInst := new Chrome(ProfilePath,,,, DebugPort)
-		```
-		
-		Another use would be to scan for running instances and attach to one
-		instead of starting a new instance.
-		
-		```
-		if (Chromes := Chrome.FindInstances())
-			ChromeInst := {"base": Chrome, "DebugPort": Chromes.MinIndex()}
-		else
-			ChromeInst := new Chrome(ProfilePath)
-		```
-	*/
-	FindInstances(){
-		static Needle := "--remote-debugging-port=(\d+)"
-		Out := {}
-		for Item in ComObjGet("winmgmts:").ExecQuery("SELECT CommandLine FROM Win32_Process WHERE Name = 'chrome.exe'")
-			if RegExMatch(Item.CommandLine, Needle, Match)
-				Out[Match1] := Item.CommandLine
-		return Out.MaxIndex() ? Out : False
-	}
-	/*
-		Queries chrome for a list of pages that expose a debug interface.
-		In addition to standard tabs, these include pages such as extension
-		configuration pages.
-	*/
-	GetPageList()
+	
+	
+	GetPageURL(url, count:=1, port:=0) 
 	{
-		http := ComObjCreate("WinHttp.WinHttpRequest.5.1")
-		http.open("GET", "http://127.0.0.1:" this.DebugPort "/json")
-		http.send()
-		return this.Jxon_Load(http.responseText)
+		n :=1
+		url := StrReplace(StrReplace(url,"http://"),"https://")
+		port := port ? port : this.DebugPort
+		MsgBox % port
+		for k,val in this.GetPageList(port) {
+			MsgBox % url " - " count " - " port " - " n " - " val.url
+			if(instr(val.url, url) && instr(val.type, "page")){
+				MsgBox % url "" val.url
+				if(n==count){
+					this.Activate(val.id)
+					return new this.Page(val.webSocketDebuggerUrl, fnCallback)
+				}
+				n++
+			}
+		}
+		return False
 	}
-	GetPageID(id)
+	GetPageID(id, port=0)
 	{
+		port := port ? port : this.DebugPort
 		for k,val in this.GetPageList()
 			if instr(val.id, id) {
 				this.Activate(val.id)
@@ -66,24 +39,11 @@ class chrome
 			}
 		return False
 	}
-	GetPageURL(url, n:=1) 
+	GetPageTitle(title,n:=1,port=0)
 	{
+		port := port ? port : this.DebugPort
 		count=1
-		for k,val in this.GetPageList() {
-			if(instr(val.url, StrReplace(StrReplace(url,"http://"),"https://")) && instr(val.type, "page")){
-				if(n==count){
-					this.Activate(val.id)
-					return new this.Page(val.webSocketDebuggerUrl, fnCallback)
-				}
-				count+=1
-			}
-		}
-		return False
-	}
-	GetPageTitle(title,n:=1)
-	{
-		count=1
-		for k,val in this.GetPageList() {
+		for k,val in this.GetPageList(port) {
 			if(instr(val.title, title) && instr(val.type, "page")){
 				if(n==count){
 					this.Activate(val.id)
@@ -94,13 +54,13 @@ class chrome
 		}
 		return False
 	}
-	Activate(id,port=0){
+	Activate(id, port:=0){
 		port := port ? port : this.DebugPort
 		http := ComObjCreate("WinHttp.WinHttpRequest.5.1")
 		http.open("GET", "http://127.0.0.1:" port "/json/activate/" id)
 		http.send()
 	}
-	Close(id,port=0){
+	Close(id, port:=0){
 		port := port ? port : this.DebugPort
 		http := ComObjCreate("WinHttp.WinHttpRequest.5.1")
 		http.open("GET", "http://127.0.0.1:" port "/json/close/" id)
@@ -152,16 +112,90 @@ class chrome
 		for Index, URL in IsObject(URLs) ? URLs : [URLs]
 			URLString .= " " this.CliEscape(URL)
 		
-		Run, % this.CliEscape(ChromePath)
-		. " --remote-debugging-port=" this.DebugPort
-		. (ProfilePath ? " --user-data-dir=" this.CliEscape(ProfilePath) : "")
-		. (Flags ? " " Flags : "")
-		. URLString
-		,,, OutputVarPID
-		this.PID := OutputVarPID
-		
+		if(this.DebugPort := this.GetPort())
+		{
+			UID := WinExist("ahk_exe chrome.exe")
+			WinActivate
+			WinGet, ChPID, PID,% "ahk_id " UID
+			this.PID := ChPID
+			this.pageid := this.IDbyUrl(url)
+			if !this.pageid
+				this.pageid := this.NewTab(url)
+		}
+		else
+		{
+			Run, % this.CliEscape(ChromePath)
+			. " --remote-debugging-port=" this.DebugPort
+			. (ProfilePath ? " --user-data-dir=" this.CliEscape(ProfilePath) : "")
+			. (Flags ? " " Flags : "")
+			. URLString
+			,,, OutputVarPID
+			this.PID := OutputVarPID
+		}
 	}
-	
+	GetPageList(){
+		http := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+		http.open("GET", "http://127.0.0.1:" this.DebugPort "/json")
+		http.send()
+		return this.Jxon_Load(http.responseText)
+	}
+	NewTab(url){
+		http := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+		http.open("GET", "http://127.0.0.1:" this.DebugPort "/json/new?" url)
+		http.send()
+		return this.IDbyUrl(url)
+	}
+	IDbyUrl(url, count:=1)
+	{
+		n :=1
+		url := StrReplace(StrReplace(url,"http://"),"https://")
+		for k,val in this.GetPageList() {
+			if(instr(val.url, url) && instr(val.type, "page")){
+				if(n==count)
+					return val.id
+				n++
+			}
+		}
+		return False
+	}
+	/*
+		Finds instances of chrome in debug mode and the ports they're running
+		on. If no instances are found, returns a false value. If one or more
+		instances are found, returns an associative array where the keys are
+		the ports, and the values are the full command line texts used to start
+		the processes.
+		
+		One example of how this may be used would be to open chrome on a
+		different port if an instance of chrome is already open on the port
+		you wanted to used.
+		
+		```
+		; If the wanted port is taken, use the largest taken port plus one
+		DebugPort := 9222
+		if (Chromes := Chrome.FindInstances()).HasKey(DebugPort)
+			DebugPort := Chromes.MaxIndex() + 1
+		ChromeInst := new Chrome(ProfilePath,,,, DebugPort)
+		```
+		
+		Another use would be to scan for running instances and attach to one
+		instead of starting a new instance.
+		
+		```
+		if (Chromes := Chrome.FindInstances())
+			ChromeInst := {"base": Chrome, "DebugPort": Chromes.MinIndex()}
+		else
+			ChromeInst := new Chrome(ProfilePath)
+		```
+	*/
+	FindInstances(){
+		static Needle := "--remote-debugging-port=(\d+)"
+		Out := {}
+		for Item in ComObjGet("winmgmts:").ExecQuery("SELECT CommandLine FROM Win32_Process WHERE Name = 'chrome.exe'")
+			if RegExMatch(Item.CommandLine, Needle, Match)
+				Out[Match1] := Item.CommandLine
+		return Out.MaxIndex() ? Out : False
+	}
+
 	/*
 		End Chrome by terminating the process.
 	*/
@@ -185,7 +219,7 @@ class chrome
 	GetPageBy(Key, Value, MatchMode:="exact", Index:=1, fnCallback:="", fnClose:="")
 	{
 		Count := 0
-		for n, PageData in this.GetPageList()
+		for n, PageData in this.GetPageList(this.DebugPort)
 		{
 			if (((MatchMode = "exact" && PageData[Key] = Value) ; Case insensitive
 			|| (MatchMode = "contains" && InStr(PageData[Key], Value))
