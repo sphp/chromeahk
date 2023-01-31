@@ -37,8 +37,7 @@ class chrome
 			ChromeInst := new Chrome(ProfilePath)
 		```
 	*/
-	FindInstances()
-	{
+	FindInstances(){
 		static Needle := "--remote-debugging-port=(\d+)"
 		Out := {}
 		for Item in ComObjGet("winmgmts:").ExecQuery("SELECT CommandLine FROM Win32_Process WHERE Name = 'chrome.exe'")
@@ -95,9 +94,16 @@ class chrome
 		}
 		return False
 	}
-	Activate(id){
+	Activate(id,port=0){
+		port := port ? port : this.DebugPort
 		http := ComObjCreate("WinHttp.WinHttpRequest.5.1")
-		http.open("GET", "http://127.0.0.1:" this.DebugPort "/json/activate/" id)
+		http.open("GET", "http://127.0.0.1:" port "/json/activate/" id)
+		http.send()
+	}
+	Close(id,port=0){
+		port := port ? port : this.DebugPort
+		http := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+		http.open("GET", "http://127.0.0.1:" port "/json/close/" id)
 		http.send()
 	}
 	GetPort(){
@@ -153,6 +159,7 @@ class chrome
 		. URLString
 		,,, OutputVarPID
 		this.PID := OutputVarPID
+		
 	}
 	
 	/*
