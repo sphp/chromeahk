@@ -8,8 +8,6 @@ class chrome
 	{
 		return """" RegExReplace(Param, "(\\*)""", "$1$1\""") """"
 	}
-	
-	
 	GetPageURL(url, count:=1, port:=0) 
 	{
 		n :=1
@@ -54,12 +52,7 @@ class chrome
 		}
 		return False
 	}
-	Activate(id, port:=0){
-		port := port ? port : this.DebugPort
-		http := ComObjCreate("WinHttp.WinHttpRequest.5.1")
-		http.open("GET", "http://127.0.0.1:" port "/json/activate/" id)
-		http.send()
-	}
+	
 	Close(id, port:=0){
 		port := port ? port : this.DebugPort
 		http := ComObjCreate("WinHttp.WinHttpRequest.5.1")
@@ -112,7 +105,7 @@ class chrome
 		for Index, URL in IsObject(URLs) ? URLs : [URLs]
 			URLString .= " " this.CliEscape(URL)
 		
-		if(this.DebugPort := this.GetPort())
+		if(this.GetPort()==this.DebugPort)
 		{
 			UID := WinExist("ahk_exe chrome.exe")
 			WinActivate
@@ -131,6 +124,7 @@ class chrome
 			. URLString
 			,,, OutputVarPID
 			this.PID := OutputVarPID
+			this.pageid := this.IDbyUrl(url)
 		}
 	}
 	GetPageList(){
@@ -151,12 +145,20 @@ class chrome
 		url := StrReplace(StrReplace(url,"http://"),"https://")
 		for k,val in this.GetPageList() {
 			if(instr(val.url, url) && instr(val.type, "page")){
-				if(n==count)
+				if(n==count){
+					this.pagews := val.webSocketDebuggerUrl
 					return val.id
+				}
 				n++
 			}
 		}
 		return False
+	}
+	Activate(){
+		http := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+		http.open("GET", "http://127.0.0.1:" this.DebugPort "/json/activate/" this.pageid)
+		http.send()
+		return new this.Page(this.pagews, fnCallback)
 	}
 	/*
 		Finds instances of chrome in debug mode and the ports they're running
